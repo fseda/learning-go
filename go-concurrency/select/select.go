@@ -1,6 +1,28 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
+
+func defaultSelect() {
+	// Without the default case, the select statement would block until one of the other two cases was ready.
+
+	tick := time.Tick(100 * time.Millisecond)
+	boom := time.After(500 * time.Millisecond)
+	for {
+		select {
+		case <-tick:
+			fmt.Println("tick.")
+		case <-boom:
+			fmt.Println("BOOM!")
+			return
+		default:
+			fmt.Println("    .")
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
 
 func fibonacci(c chan int, quit chan int) {
 	x, y := 0, 1
@@ -8,7 +30,7 @@ func fibonacci(c chan int, quit chan int) {
 		select {
 		case c <- x:
 			x, y = y, x+y
-		case <- quit:
+		case <-quit:
 			fmt.Println("quit")
 			return
 		}
@@ -18,7 +40,7 @@ func fibonacci(c chan int, quit chan int) {
 func main() {
 	c := make(chan int)
 	quit := make(chan int)
-	go func()  {
+	go func() {
 		for i := 0; i < 10; i++ {
 			fmt.Println(<-c)
 		}
@@ -26,4 +48,7 @@ func main() {
 	}()
 
 	fibonacci(c, quit)
+	fmt.Println()
+
+	defaultSelect()
 }
